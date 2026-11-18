@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Build Arena — рейтинговая арена</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- ===== Авторизация ===== -->
+  <section id="auth" class="screen">
+    <div class="card">
+      <h1>BUILD<span>ARENA</span></h1>
+      <p class="sub">Стройка, как в Fortnite. Души и ядра, как в Dota и Deadlock. Рейтинг Elo.</p>
+      <div class="tabs">
+        <button id="tab-login" class="tab active">Вход</button>
+        <button id="tab-register" class="tab">Регистрация</button>
+      </div>
+      <label id="row-name" class="hidden">Ник (3–16 символов)
+        <input id="in-name" maxlength="16" autocomplete="username" placeholder="Например, Builder99">
+      </label>
+      <label>Email
+        <input id="in-email" type="email" autocomplete="email" placeholder="you@mail.com">
+      </label>
+      <label>Пароль
+        <input id="in-pass" type="password" autocomplete="current-password" placeholder="минимум 6 символов">
+      </label>
+      <button id="btn-auth" class="btn primary">Войти</button>
+      <button id="btn-skip" class="btn ghost">Играть без аккаунта (тренировка)</button>
+    </div>
+  </section>
+
+  <!-- ===== Меню ===== -->
+  <section id="menu" class="screen">
+    <div class="card wide">
+      <h1>BUILD<span>ARENA</span></h1>
+      <div id="offline-note" class="note hidden">
+        Онлайн-режим не настроен: заполни <code>config.js</code> данными Supabase (см. README). Тренировка работает и так.
+      </div>
+      <div id="me-box" class="me-box">
+        <div>
+          <div id="me-name" class="me-name">Гость</div>
+          <div id="me-stats" class="me-stats"></div>
+        </div>
+        <div class="me-rating"><span id="me-rating">—</span><small>рейтинг</small></div>
+      </div>
+      <div class="btn-col">
+        <button id="btn-find" class="btn primary big">⚔ Найти рейтинговый матч</button>
+        <button id="btn-practice" class="btn big">🤖 Тренировка с ботом</button>
+        <button id="btn-board" class="btn">🏆 Таблица лидеров</button>
+        <button id="btn-logout" class="btn ghost">Выйти</button>
+      </div>
+      <details class="help" open>
+        <summary>Управление и правила</summary>
+        <ul>
+          <li><b>WASD</b> — движение, <b>мышь</b> — прицел, <b>ЛКМ</b> — стрельба, <b>1 / 2</b> — винтовка / дробовик</li>
+          <li><b>Q</b> или <b>ПКМ</b> — поставить стену (10 материалов, восстанавливаются сами)</li>
+          <li><b>E</b> — редактировать свою стену: стена → окно (пули летят) → дверь (проходить можно) → стена</li>
+          <li><b>Пробел</b> — рывок, <b>Z</b> — взрывная волна, <b>R</b> — удар с орбиты (с 3 уровня)</li>
+          <li>Убивай нейтралов и врага — получай души, растёт уровень: здоровье, урон, способности</li>
+          <li>Цель: уничтожить ядро врага (оно стреляет по приближающимся!). Через 4 минуты побеждает тот, у кого ядро целее</li>
+        </ul>
+      </details>
+    </div>
+  </section>
+
+  <!-- ===== Поиск матча ===== -->
+  <section id="queue" class="screen">
+    <div class="card">
+      <h2>Поиск соперника…</h2>
+      <div class="spinner"></div>
+      <p id="queue-timer" class="sub">0 с</p>
+      <button id="btn-cancel" class="btn">Отмена</button>
+    </div>
+  </section>
+
+  <!-- ===== Таблица лидеров ===== -->
+  <section id="board" class="screen">
+    <div class="card wide">
+      <h2>🏆 Топ игроков</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>#</th><th>Игрок</th><th>Рейтинг</th><th>Игры</th><th>Победы</th></tr></thead>
+          <tbody id="board-body"></tbody>
+        </table>
+      </div>
+      <button id="btn-board-back" class="btn">Назад</button>
+    </div>
+  </section>
+
+  <!-- ===== Игра ===== -->
+  <section id="game" class="screen">
+    <canvas id="cv" width="1600" height="900"></canvas>
+    <button id="btn-leave" class="leave">Выйти (Esc)</button>
+    <div id="result" class="overlay hidden">
+      <div class="card">
+        <h2 id="res-title">ПОБЕДА</h2>
+        <p id="res-sub" class="sub"></p>
+        <p id="res-rating" class="rating-change"></p>
+        <div class="btn-col">
+          <button id="btn-again" class="btn primary hidden">Ещё раз</button>
+          <button id="btn-res-menu" class="btn">В меню</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="sim.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
