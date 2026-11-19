@@ -24,6 +24,21 @@ Destroy the enemy core. It shoots anyone who gets too close. If nobody manages i
 
 Every key can be changed in **Settings**.
 
+## Playing without a mouse
+
+Open **Settings → Control mode → Keyboard only**, or press **T** during a match.
+
+| Key | Action |
+|---|---|
+| Arrow keys | Aim |
+| X | Fire |
+
+- With no arrows held, your aim locks onto the nearest target by itself.
+- A marker ahead of you shows where the next wall will go.
+- Edit (E) picks the nearest wall along your aim, and its health shows above it.
+- Blink and the orbital strike go where you aim.
+- Menus work with Tab, arrow keys and Enter.
+
 ## Building
 
 - A wall costs 10 materials.
@@ -63,6 +78,10 @@ Everyone starts at 1000 rating. Win to climb, lose to drop.
 Bronze (under 900) · Silver (900) · Gold (1100) · Platinum (1300) · Diamond (1500) · Master (1700)
 
 Not ready for ranked? Try **Practice** against a bot. It doesn't affect your rating.
+
+## Devlog
+
+See what is new and what is coming in the **Devlog** screen in the main menu.
 
 ## Languages
 

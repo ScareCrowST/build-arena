@@ -17,6 +17,7 @@
     <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2V5zM4 19a2 2 0 012-2h13"/></symbol>
     <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"/></symbol>
     <symbol id="i-out" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
+    <symbol id="i-log" viewBox="0 0 24 24"><path d="M6 3h12a1 1 0 011 1v16a1 1 0 01-1 1H6a1 1 0 01-1-1V4a1 1 0 011-1zM9 8h6M9 12h6M9 16h4"/></symbol>
     <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></symbol>
   </svg>
 
@@ -75,8 +76,9 @@
           <button id="btn-practice" class="menu-btn" style="--i:1"><svg class="ic"><use href="#i-bot"/></svg><span class="mb-txt"><b data-i18n="menu_practice"></b><small data-i18n="menu_practice_sub"></small></span></button>
           <button id="btn-board" class="menu-btn" style="--i:2"><svg class="ic"><use href="#i-trophy"/></svg><span class="mb-txt"><b data-i18n="menu_board"></b><small data-i18n="menu_board_sub"></small></span></button>
           <button id="btn-help" class="menu-btn" style="--i:3"><svg class="ic"><use href="#i-book"/></svg><span class="mb-txt"><b data-i18n="menu_help"></b><small data-i18n="menu_help_sub"></small></span></button>
-          <button id="btn-settings" class="menu-btn" style="--i:4"><svg class="ic"><use href="#i-gear"/></svg><span class="mb-txt"><b data-i18n="menu_settings"></b><small data-i18n="menu_settings_sub"></small></span></button>
-          <button id="btn-logout" class="menu-btn ghost" style="--i:5"><svg class="ic"><use href="#i-out"/></svg><span class="mb-txt"><b id="logout-txt" data-i18n="menu_logout"></b></span></button>
+          <button id="btn-devlog" class="menu-btn" style="--i:4"><svg class="ic"><use href="#i-log"/></svg><span class="mb-txt"><b data-i18n="menu_devlog"></b><small data-i18n="menu_devlog_sub"></small></span><em id="devlog-new" class="badge hidden" data-i18n="badge_new"></em></button>
+          <button id="btn-settings" class="menu-btn" style="--i:5"><svg class="ic"><use href="#i-gear"/></svg><span class="mb-txt"><b data-i18n="menu_settings"></b><small data-i18n="menu_settings_sub"></small></span></button>
+          <button id="btn-logout" class="menu-btn ghost" style="--i:6"><svg class="ic"><use href="#i-out"/></svg><span class="mb-txt"><b id="logout-txt" data-i18n="menu_logout"></b></span></button>
         </nav>
       </div>
       <aside class="menu-right">
@@ -143,6 +145,9 @@
           <h3 data-i18n="set_lang"></h3>
           <div class="seg"><button id="lang-ru">Русский</button><button id="lang-en">English</button></div>
 
+          <h3 data-i18n="set_ctrl_mode"></h3>
+          <div class="seg"><button id="ctrl-mouse" data-i18n="ctrl_mouse"></button><button id="ctrl-kbd" data-i18n="ctrl_kbd"></button></div>
+
           <h3 data-i18n="set_audio"></h3>
           <div class="set-row"><span data-i18n="set_volume"></span>
             <div class="range-box"><input id="set-vol" type="range" min="0" max="100" step="1"><b id="set-vol-val"></b></div></div>
@@ -157,7 +162,7 @@
         <div class="set-col">
           <h3 data-i18n="set_controls"></h3>
           <div id="set-binds" class="binds"></div>
-          <p class="muted small" data-i18n="mouse_info"></p>
+          <p id="mouse-info" class="muted small"></p>
           <button id="btn-reset-binds" class="btn ghost" data-i18n="set_reset"></button>
         </div>
       </div>
@@ -171,6 +176,16 @@
       <h2 data-i18n="help_title"></h2>
       <div id="help-body" class="help-grid"></div>
       <button id="btn-help-back" class="btn" data-i18n="back"></button>
+    </div>
+  </section>
+
+  <!-- ===== Девлог ===== -->
+  <section id="devlog" class="screen">
+    <div class="panel glass wide">
+      <h2 data-i18n="devlog_title"></h2>
+      <p class="muted small center-text" data-i18n="devlog_sub"></p>
+      <div id="devlog-body" class="devlog"></div>
+      <button id="btn-devlog-back" class="btn" data-i18n="back"></button>
     </div>
   </section>
 
@@ -209,6 +224,7 @@
   <script src="config.js"></script>
   <script src="i18n.js"></script>
   <script src="settings.js"></script>
+  <script src="devlog.js"></script>
   <script src="audio.js"></script>
   <script src="sim.js"></script>
   <script src="intro.js"></script>

@@ -5,10 +5,11 @@
   const DEF_BINDS = {
     up: 'KeyW', down: 'KeyS', left: 'KeyA', right: 'KeyD',
     build: 'KeyQ', edit: 'KeyE', nova: 'KeyZ', dash: 'Space', strike: 'KeyR',
-    mod1: 'KeyF', mod2: 'KeyG', wep1: 'Digit1', wep2: 'Digit2'
+    mod1: 'KeyF', mod2: 'KeyG', wep1: 'Digit1', wep2: 'Digit2',
+    fire: 'KeyX', aimUp: 'ArrowUp', aimDown: 'ArrowDown', aimLeft: 'ArrowLeft', aimRight: 'ArrowRight', ctrl: 'KeyT'
   };
   const ACTIONS = Object.keys(DEF_BINDS);
-  const DEF = { vol: 0.6, shake: 1, quality: 'high', dmg: true, fps: false };
+  const DEF = { vol: 0.6, shake: 1, quality: 'high', dmg: true, fps: false, ctrl: 'mouse' };
 
   const binds = Object.assign({}, DEF_BINDS);
   const data = Object.assign({}, DEF);
@@ -27,6 +28,7 @@
         if (d.quality === 'low' || d.quality === 'high') data.quality = d.quality;
         if (typeof d.dmg === 'boolean') data.dmg = d.dmg;
         if (typeof d.fps === 'boolean') data.fps = d.fps;
+        if (d.ctrl === 'mouse' || d.ctrl === 'kbd') data.ctrl = d.ctrl;
       }
     } catch (e) { /* ignore */ }
   }
@@ -120,6 +122,10 @@
     const ru = $('lang-ru'), en = $('lang-en');
     if (ru) ru.classList.toggle('on', window.I18N.lang === 'ru');
     if (en) en.classList.toggle('on', window.I18N.lang === 'en');
+    const cm = $('ctrl-mouse'), ck = $('ctrl-kbd');
+    if (cm) cm.classList.toggle('on', data.ctrl === 'mouse');
+    if (ck) ck.classList.toggle('on', data.ctrl === 'kbd');
+    const mi = $('mouse-info'); if (mi) mi.textContent = window.I18N.t(data.ctrl === 'kbd' ? 'kbd_info' : 'mouse_info');
     const q = $('set-quality');
     if (q) { q.textContent = window.I18N.t(data.quality === 'low' ? 'q_low' : 'q_high'); }
     const d = $('set-dmg'); if (d) { d.textContent = window.I18N.t(data.dmg ? 'on' : 'off'); d.classList.toggle('on', data.dmg); }
@@ -137,6 +143,8 @@
     const on = (id, ev, fn) => { const el = $(id); if (el) el.addEventListener(ev, fn); };
     on('lang-ru', 'click', () => window.I18N.setLang('ru'));
     on('lang-en', 'click', () => window.I18N.setLang('en'));
+    on('ctrl-mouse', 'click', () => setCtrl('mouse'));
+    on('ctrl-kbd', 'click', () => setCtrl('kbd'));
     on('btn-lang', 'click', () => window.I18N.setLang(window.I18N.lang === 'ru' ? 'en' : 'ru'));
     on('set-vol', 'input', e => { data.vol = e.target.value / 100; save(); render(); if (window.SFX) window.SFX.setVolume(); });
     on('set-vol', 'change', () => { if (window.SFX) window.SFX.play('click'); });
@@ -149,7 +157,13 @@
     render();
   }
 
+  function setCtrl(v) {
+    if (v !== 'mouse' && v !== 'kbd') return;
+    data.ctrl = v; save(); render();
+    if (window.SFX) window.SFX.play('click');
+  }
+
   function cancelCapture() { if (capturing) { capturing = null; render(); } }
 
-  window.Settings = { data, binds, ACTIONS, label, reverse, render, init, save, cancelCapture, get capturing() { return capturing; } };
+  window.Settings = { data, binds, ACTIONS, label, reverse, render, init, save, setCtrl, cancelCapture, get capturing() { return capturing; } };
 })();

@@ -484,7 +484,7 @@
 
   function drawWalls(w, me) {
     const t = V.time, mp = w.players[me];
-    const hoverI = w.cellIdx(V.G.mouse.x, V.G.mouse.y);
+    const hv = V.G.hov || V.G.mouse, hoverI = w.cellIdx(hv.x, hv.y);
     for (let i = 0; i < w.walls.length; i++) {
       const wl = w.walls[i];
       if (!wl) { V.wprev[i] = undefined; continue; }
@@ -555,7 +555,7 @@
   }
 
   function drawHover(w, me) {
-    const m = V.G.mouse, i = w.cellIdx(m.x, m.y);
+    const m = V.G.hov || V.G.mouse, i = w.cellIdx(m.x, m.y);
     if (i < 0 || !w.walls[i]) return;
     const wl = w.walls[i], mp = w.players[me];
     const x = (i % C.GW) * C.T, y = Math.floor(i / C.GW) * C.T;
@@ -803,6 +803,20 @@
     }
   }
 
+  function drawLock(G, me) {
+    if (ST().ctrl !== 'kbd' || me.dead) return;
+    const m = G.mouse, t = V.time;
+    ctx.strokeStyle = 'rgba(255,255,255,.16)'; ctx.lineWidth = 1.5; ctx.setLineDash([4, 7]);
+    ctx.beginPath(); ctx.moveTo(me.x, me.y); ctx.lineTo(m.x, m.y); ctx.stroke(); ctx.setLineDash([]);
+    const k = G.lock;
+    if (!k) return;
+    const r = (k.r || 22) + 14 + Math.sin(t * 6) * 2;
+    ctx.save(); ctx.translate(k.x, k.y); ctx.rotate(t * 1.6);
+    ctx.strokeStyle = 'rgba(255,207,90,.9)'; ctx.lineWidth = 2.5; ctx.lineCap = 'round';
+    for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.arc(0, 0, r, i * Math.PI / 2 + 0.2, i * Math.PI / 2 + 1.1); ctx.stroke(); }
+    ctx.restore(); ctx.lineCap = 'butt';
+  }
+
   function drawCrosshair(G) {
     const m = G.mouse, g = 7 + V.spread * 10, t = V.time;
     ctx.strokeStyle = 'rgba(255,255,255,.95)'; ctx.lineWidth = 2; ctx.lineCap = 'round';
@@ -940,9 +954,9 @@
     });
 
     if (w.time < 14 && G.ready && w.cdown <= 0) {
-      const hint = L('hint_game', {
+      const hint = L(ST().ctrl === 'kbd' ? 'hint_game_kbd' : 'hint_game', {
         up: lab('up'), left: ' ' + lab('left'), down: ' ' + lab('down'), right: ' ' + lab('right'),
-        build: lab('build'), edit: lab('edit'), nova: lab('nova'), dash: lab('dash'), mod1: lab('mod1'), mod2: lab('mod2')
+        build: lab('build'), fire: lab('fire'), edit: lab('edit'), nova: lab('nova'), dash: lab('dash'), mod1: lab('mod1'), mod2: lab('mod2')
       });
       text(hint, C.W / 2, C.H - 136, 13, 'rgba(255,255,255,.6)', 'center', 600, clamp((14 - w.time) / 2, 0, 1));
     }
@@ -990,7 +1004,7 @@
     if (w.over) { ctx.fillStyle = 'rgba(3,6,13,' + clamp((V.time - (V.overT || (V.overT = V.time))) * 0.5, 0, 0.35) + ')'; ctx.fillRect(0, 0, C.W, C.H); }
 
     drawHud(G, w, me);
-    if (!me.dead && !w.over) drawCrosshair(G);
+    if (!me.dead && !w.over) { drawLock(G, me); drawCrosshair(G); }
   }
 
   window.Render = {

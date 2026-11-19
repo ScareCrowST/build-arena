@@ -30,6 +30,16 @@
     if (id === 'game') window.MenuBG.stop(); else window.MenuBG.start();
     if (!same) window.Wipe.go();
     if (id === 'menu') onMenuShown();
+    if (id === 'menu') updateDevBadge();
+    focusFirst(id);
+  }
+  function focusFirst(id) {
+    const sc = $(id); if (!sc || id === 'game' || id === 'auth') return;
+    setTimeout(() => {
+      if (curScreen !== id || (document.activeElement && /INPUT/.test(document.activeElement.tagName))) return;
+      const b = sc.querySelector('.menu-btn:not([disabled]), .btn:not([disabled]):not(.hidden)');
+      if (b && !document.body.classList.contains('booting')) b.focus({ preventScroll: true });
+    }, 60);
   }
   let toastT = 0;
   function toast(msg, ms) {
@@ -265,8 +275,42 @@
     kd.appendChild(line); box.appendChild(kd);
   }
 
-  function openSub(id) { subFrom = curScreen === 'game' ? 'menu' : curScreen; if (id === 'help') buildHelp(); show(id); }
-  function closeSub() { window.Settings.cancelCapture(); show(subFrom && subFrom !== 'settings' && subFrom !== 'help' ? subFrom : 'menu'); }
+  /* ============================== девлог ============================== */
+  function buildDevlog() {
+    const box = $('devlog-body'), D = window.DEVLOG, lang = window.I18N.lang;
+    if (!box || !D) return;
+    box.textContent = '';
+    D.entries.forEach((e, i) => {
+      const card = document.createElement('article');
+      card.className = 'dev-entry'; card.style.setProperty('--i', i);
+      const head = document.createElement('div'); head.className = 'dev-head';
+      const ver = document.createElement('span'); ver.className = 'dev-ver'; ver.textContent = 'v' + e.ver;
+      const ttl = document.createElement('b'); ttl.textContent = e.title[lang] || e.title.en;
+      const dt = document.createElement('small'); dt.className = 'muted'; dt.textContent = e.date;
+      head.appendChild(ver); head.appendChild(ttl); head.appendChild(dt);
+      const ul = document.createElement('ul');
+      (e.items[lang] || e.items.en).forEach(t => { const li = document.createElement('li'); li.textContent = t; ul.appendChild(li); });
+      card.appendChild(head); card.appendChild(ul); box.appendChild(card);
+    });
+    const nx = document.createElement('article'); nx.className = 'dev-entry dev-next'; nx.style.setProperty('--i', D.entries.length);
+    const h = document.createElement('div'); h.className = 'dev-head';
+    const hb = document.createElement('b'); hb.textContent = L('devlog_next'); h.appendChild(hb);
+    const ul = document.createElement('ul');
+    (D.next[lang] || D.next.en).forEach(t => { const li = document.createElement('li'); li.textContent = t; ul.appendChild(li); });
+    nx.appendChild(h); nx.appendChild(ul); box.appendChild(nx);
+  }
+  function devSeen() { try { return localStorage.getItem('ba_dev_seen'); } catch (e) { return null; } }
+  function updateDevBadge() {
+    const b = $('devlog-new');
+    if (b && window.DEVLOG) b.classList.toggle('hidden', devSeen() === window.DEVLOG.latest);
+  }
+  function openDevlog() {
+    try { localStorage.setItem('ba_dev_seen', window.DEVLOG.latest); } catch (e) { /* ignore */ }
+    updateDevBadge(); openSub('devlog');
+  }
+
+  function openSub(id) { subFrom = curScreen === 'game' ? 'menu' : curScreen; if (id === 'help') buildHelp(); if (id === 'devlog') buildDevlog(); show(id); }
+  function closeSub() { window.Settings.cancelCapture(); show(subFrom && subFrom !== 'settings' && subFrom !== 'help' && subFrom !== 'devlog' ? subFrom : 'menu'); }
 
   /* ============================== матчмейкинг ============================== */
   let queueing = false;
@@ -316,7 +360,7 @@
   const cv = $('cv');
   const held = {}; let pressed = {};
   const mouse = { x: C.W / 2, y: C.H / 2 };
-  let mdown = false, rdown = false;
+  let mdown = false, rdown = false, mouseEver = false;
   let G = null, raf = 0, lastT = 0;
 
   function beginGame(o) {
@@ -425,6 +469,63 @@
     G.out.push(a);
   }
 
+  /* ---------- режим «только клавиатура» ---------- */
+  const KB = { RET: 120, BLINK: 360, STRIKE: 320, LOCK: 700, MANUAL_T: 0.9 };
+  const kbdOn = () => window.Settings.data.ctrl === 'kbd';
+
+  function kbdTarget(w, p) {
+    let best = null, bd = KB.LOCK;
+    const e = w.players[1 - p.id];
+    if (e && !e.dead) { const d = Math.hypot(e.x - p.x, e.y - p.y); if (d < bd) { bd = d; best = e; } }
+    if (!best || bd > 380) {
+      for (const c of w.camps) {
+        if (!c.alive) continue;
+        if (!c.boss && (p.id === 0 ? c.x > 800 : c.x < 800)) continue;
+        const d = Math.hypot(c.x - p.x, c.y - p.y);
+        if (d < Math.min(bd, 520)) { bd = d; best = c; }
+      }
+    }
+    if (!best) {
+      const fc = w.cores[1 - p.id], d = Math.hypot(fc.x - p.x, fc.y - p.y);
+      if (d < 560) best = fc;
+    }
+    return best;
+  }
+
+  /* первая стена на линии прицела: для правки и подсказки по здоровью */
+  function kbdWall(w, p, ang) {
+    for (let d = 20; d <= C.EDIT_RANGE; d += 12) {
+      const x = p.x + Math.cos(ang) * d, y = p.y + Math.sin(ang) * d;
+      const i = w.cellIdx(x, y);
+      if (i >= 0 && w.walls[i]) return { x, y };
+    }
+    return null;
+  }
+
+  function updateKbdAim(w, p, dt) {
+    const ax = (held.aimRight ? 1 : 0) - (held.aimLeft ? 1 : 0), ay = (held.aimDown ? 1 : 0) - (held.aimUp ? 1 : 0);
+    if (G.kAim === undefined) { G.kAim = p.id === 0 ? 0 : Math.PI; G.kManual = 0; }
+    G.lock = null;
+    if (ax || ay) { G.kAim = Math.atan2(ay, ax); G.kManual = KB.MANUAL_T; }
+    else if (G.kManual > 0) G.kManual -= dt;
+    else {
+      const tg = kbdTarget(w, p);
+      if (tg) { G.kAim = Math.atan2(tg.y - p.y, tg.x - p.x); G.lock = tg; }
+    }
+    p.aim = G.kAim;
+    const c = Math.cos(G.kAim), s = Math.sin(G.kAim);
+    mouse.x = clamp(p.x + c * KB.RET, 0, C.W); mouse.y = clamp(p.y + s * KB.RET, 0, C.H);
+    G.hov = kbdWall(w, p, G.kAim);
+    G.kEdit = G.hov;
+  }
+
+  function toggleCtrl() {
+    const nv = kbdOn() ? 'mouse' : 'kbd';
+    window.Settings.setCtrl(nv);
+    G.hov = null; G.lock = null;
+    toast(L('ctrl_now_' + nv), 1800);
+  }
+
   function step(dt, t) {
     const w = G.world, p = w.players[G.me];
     G.rdown = rdown;
@@ -435,21 +536,31 @@
     if (pressed.wep1) G.wep = 0;
     if (pressed.wep2) G.wep = 1;
 
+    if (pressed.ctrl) toggleCtrl();
+    /* если мышью ни разу не пользовались, а нажата стрелка прицела — включаем клавиатуру сами */
+    if (!kbdOn() && !mouseEver && (pressed.aimUp || pressed.aimDown || pressed.aimLeft || pressed.aimRight)) toggleCtrl();
+
     const live = G.ready && !w.over && w.cdown <= 0 && !p.dead;
     let mx = 0, my = 0;
     if (live) {
+      const kbd = kbdOn();
       mx = (held.right ? 1 : 0) - (held.left ? 1 : 0);
       my = (held.down ? 1 : 0) - (held.up ? 1 : 0);
-      p.aim = Math.atan2(mouse.y - p.y, mouse.x - p.x);
+      if (kbd) updateKbdAim(w, p, dt); else { G.hov = null; G.lock = null; p.aim = Math.atan2(mouse.y - p.y, mouse.x - p.x); }
       w.movePlayer(p, mx, my, dt);
       const send = a => { a.aim = p.aim; if (G.mode === 'guest') pushOut(a); else w.act(G.me, a); };
-      if (mdown) send({ k: 'fire', w: G.wep });
-      if (held.build || rdown) send({ k: 'build', x: mouse.x, y: mouse.y });
-      if (pressed.edit) send({ k: 'edit', x: mouse.x, y: mouse.y });
+      const fx = mouse.x, fy = mouse.y;
+      const ex = kbd && G.kEdit ? G.kEdit.x : fx, ey = kbd && G.kEdit ? G.kEdit.y : fy;
+      const sx = kbd ? (G.lock ? G.lock.x : p.x + Math.cos(p.aim) * KB.STRIKE) : fx;
+      const sy = kbd ? (G.lock ? G.lock.y : p.y + Math.sin(p.aim) * KB.STRIKE) : fy;
+      const bx = kbd ? p.x + Math.cos(p.aim) * KB.BLINK : fx, by = kbd ? p.y + Math.sin(p.aim) * KB.BLINK : fy;
+      if (mdown || held.fire) send({ k: 'fire', w: G.wep });
+      if (held.build || rdown) send({ k: 'build', x: fx, y: fy });
+      if (pressed.edit) send({ k: 'edit', x: ex, y: ey });
       if (pressed.nova) send({ k: 'nova' });
-      if (pressed.strike) send({ k: 'strike', x: mouse.x, y: mouse.y });
-      if (pressed.mod1) send({ k: 'mod', i: 0, x: mouse.x, y: mouse.y });
-      if (pressed.mod2) send({ k: 'mod', i: 1, x: mouse.x, y: mouse.y });
+      if (pressed.strike) send({ k: 'strike', x: sx, y: sy });
+      if (pressed.mod1) send({ k: 'mod', i: 0, x: bx, y: by });
+      if (pressed.mod2) send({ k: 'mod', i: 1, x: bx, y: by });
       if (pressed.dash) w.dash(p, mx, my);
     }
     for (const k in pressed) delete pressed[k];
@@ -534,15 +645,35 @@
   window.addEventListener('keydown', e => {
     if (G || window.Settings.capturing || e.code !== 'Escape') return;
     if (modalOpen()) { closeModal(false); return; }
-    if (curScreen === 'settings' || curScreen === 'help' || curScreen === 'board') closeSub();
+    if (curScreen === 'settings' || curScreen === 'help' || curScreen === 'board' || curScreen === 'devlog') closeSub();
     else if (curScreen === 'queue') cancelQueue();
+  });
+  /* навигация по меню стрелками (для игры без мыши) */
+  window.addEventListener('keydown', e => {
+    if (G || window.Settings.capturing || e.altKey || e.ctrlKey || e.metaKey) return;
+    const dir = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 }[e.code];
+    if (!dir) return;
+    const a = document.activeElement;
+    if (a && /INPUT|TEXTAREA|SELECT/.test(a.tagName)) return;
+    const scope = modalOpen() ? $('modal') : $(curScreen);
+    if (!scope) return;
+    const list = Array.from(scope.querySelectorAll('button')).filter(b => !b.disabled && b.offsetParent !== null);
+    if (!list.length) return;
+    e.preventDefault();
+    let i = list.indexOf(a);
+    i = i < 0 ? (dir > 0 ? 0 : list.length - 1) : (i + dir + list.length) % list.length;
+    list[i].focus();
+    sfx('hover');
   });
   window.addEventListener('keyup', e => {
     const act = window.Settings.reverse()[e.code];
     if (act) held[act] = false;
   });
+  window.addEventListener('mousemove', () => { mouseEver = true; }, { passive: true });
   window.addEventListener('blur', () => { for (const k in held) held[k] = false; mdown = rdown = false; });
   cv.addEventListener('mousemove', e => {
+    if (G) mouseEver = true;
+    if (kbdOn()) return;
     const r = cv.getBoundingClientRect();
     mouse.x = clamp((e.clientX - r.left) / r.width * C.W, 0, C.W);
     mouse.y = clamp((e.clientY - r.top) / r.height * C.H, 0, C.H);
@@ -572,6 +703,8 @@
     $('btn-board-back').onclick = () => show('menu');
     $('btn-help').onclick = () => openSub('help');
     $('btn-help-back').onclick = closeSub;
+    $('btn-devlog').onclick = openDevlog;
+    $('btn-devlog-back').onclick = closeSub;
     $('btn-settings').onclick = () => openSub('settings');
     $('btn-gear').onclick = () => { if (curScreen === 'settings') closeSub(); else openSub('settings'); };
     $('btn-set-back').onclick = closeSub;
@@ -583,7 +716,7 @@
     $('modal-no').onclick = () => closeModal(false);
 
     window.addEventListener('langchange', () => {
-      setMode(regMode); renderMenu(); renderTop(); showTip(false); buildHelp();
+      setMode(regMode); renderMenu(); renderTop(); showTip(false); buildHelp(); buildDevlog();
     });
 
     const introP = window.Intro.run();
