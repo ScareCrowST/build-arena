@@ -242,7 +242,7 @@
 
   function detect() {
     try { const s = localStorage.getItem('ba_lang'); if (s === 'ru' || s === 'en') return s; } catch (e) { /* ignore */ }
-    return String((typeof navigator !== 'undefined' && navigator.language) || 'en').toLowerCase().indexOf('ru') === 0 ? 'ru' : 'en';
+    return 'en';
   }
 
   let lang = detect();

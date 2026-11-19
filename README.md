@@ -1,86 +1,69 @@
 # BUILD ARENA
 
-Рейтинговая дуэль 1 на 1 в браузере (HTML + JS + CSS, без сборки). Строй и правь стены, добывай материалы и модули, зарабатывай души и уровни, разрушь ядро врага. Рейтинг Elo, аккаунты и матчмейкинг на Supabase. Интерфейс на русском и английском.
+A ranked 1v1 arena duel that runs right in your browser. Build and edit walls, grab modules, level up and destroy the enemy core.
 
-## Что нового в этой версии
+**Play:** https://scarecrowst.github.io/build-arena/
 
-- Эпичное интро с пропуском по клику, живой анимированный фон меню, плавные переходы между экранами.
-- **Конечные материалы**: стена стоит 10, запас не восстанавливается сам. Материалы падают из обломков на карте, нейтральных лагерей, убийств врага и босса.
-- **Модули** (2 слота, активируются клавишами F и G): Энергощит, Ремкомплект, Мина, Форсаж, Турель, Блинк. Их дают капсулы на карте и босс.
-- Анимация постройки стены, полоска прочности стены при наведении курсора.
-- Настройки: язык RU/EN, громкость, тряска экрана, качество эффектов, числа урона, FPS и **переназначение всех клавиш**.
-- Звуковые эффекты (синтез в браузере, без файлов).
+## Goal
 
-## Что внутри
+Destroy the enemy core. It shoots anyone who gets too close. If nobody manages it in 4 minutes, the player whose core has more health wins.
 
-| Файл | Назначение |
+## Controls
+
+| Key | Action |
 |---|---|
-| `index.html`, `style.css` | экраны: интро, вход, меню, поиск, таблица, настройки, справка, игра |
-| `sim.js` | игровое ядро без DOM: физика, оружие, стройка, модули, лагеря, ядра, бот, снапшоты |
-| `render.js` | отрисовка игры на canvas: свет, частицы, анимации, HUD |
-| `intro.js` | интро, фон меню, переходы |
-| `main.js` | интерфейс, Supabase (аккаунты, матчмейкинг), сеть матча, ввод |
-| `i18n.js` | все тексты на двух языках (названия «Модули» и прочее меняются здесь) |
-| `settings.js` | настройки и клавиши (хранятся в браузере) |
-| `audio.js` | звуки |
-| `config.js` | **сюда вставляешь URL и ключ Supabase** |
-| `schema.sql` | таблицы, RLS, функции матчмейкинга и расчёта Elo |
+| W A S D | Move |
+| Left mouse | Fire (aim with the cursor) |
+| Right mouse / Q | Place a wall |
+| E | Edit a wall: wall → window → door |
+| Z | Nova blast |
+| Space | Dash |
+| R | Orbital strike (unlocks at level 3) |
+| F / G | Use module in slot 1 / slot 2 |
+| 1 / 2 | Rifle / Shotgun |
 
-## Управление по умолчанию
+Every key can be changed in **Settings**.
 
-W A S D: ход. ЛКМ: огонь. ПКМ или Q: стена. E: правка стены (стена, окно, дверь). Z: взрывная волна. Пробел: рывок. R: удар с орбиты (с 3 уровня). F / G: модуль 1 / 2. 1 / 2: винтовка / дробовик. Всё переназначается в настройках.
+## Building
 
-## Быстрый старт без сервера (тренировка с ботом)
+- A wall costs 10 materials.
+- A window lets bullets through. A door lets you walk through.
+- Hover over a wall to see its health.
 
-```bash
-python3 -m http.server 8080      # в папке проекта
-# открыть http://localhost:8080
-```
-Пока `config.js` не заполнен, работает «Тренировка с ботом», онлайн отключён.
+## Materials
 
-## Подключение Supabase (аккаунты, база, рейтинг)
+Materials never regenerate on their own. Get more from:
 
-1. Создай проект на [supabase.com](https://supabase.com) (бесплатного тарифа хватает).
-2. **SQL Editor → New query**, вставь весь `schema.sql`, нажми **Run**.
-3. **Authentication → Sign In / Providers → Email**: для быстрого старта выключи **Confirm email**, иначе после регистрации придётся подтверждать почту.
-4. **Project Settings → API**: скопируй *Project URL* и *anon / publishable key* в `config.js`.
-   Этот ключ публичный, это нормально: данные защищены RLS и функциями из `schema.sql`.
-5. Открой игру в двух разных браузерах (или обычном окне и режиме инкогнито), зарегистрируй двух игроков, нажми «Найти рейтинговый матч» в обоих.
+- scrap on the map (25 each, comes back after 20 seconds)
+- neutral camps
+- killing the enemy
+- the boss in the middle
 
-## Хостинг на GitHub Pages (бесплатно)
+## Souls and levels
 
-1. Создай репозиторий и залей все файлы в корень (`git push`).
-2. **Settings → Pages → Build and deployment**: Source = *Deploy from a branch*, ветка `main`, папка `/ (root)`.
-3. Через минуту игра будет доступна на `https://<user>.github.io/<repo>/`.
+Kill neutrals and the enemy to earn souls. Levels raise your health and damage, and level 3 unlocks the orbital strike.
 
-GitHub Pages отдаёт только статику, поэтому база, аккаунты и матчмейкинг живут в Supabase, а клиент ходит туда напрямую из браузера. Подойдут и Netlify, Cloudflare Pages, Vercel: ничего не нужно собирать.
+## Modules
 
-## Как это работает
+You have two slots. Grab a capsule from the map or take one from the boss, then press the slot key to use it once.
 
-- **Матчмейкинг**: клиент раз в 1,5 с вызывает `find_match()`. Функция ставит в очередь или сводит с ближайшим по рейтингу (окно поиска растёт с ожиданием). Хост матча — игрок `p1`.
-- **Игровой онлайн**: хост считает весь мир и шлёт снапшоты (~15 раз в секунду, около 1 КБ) через Supabase Realtime Broadcast. Гость шлёт свою позицию и действия (~20 раз в секунду). Свои движения и рывок гость считает локально, поэтому управление не запаздывает.
-- **Elo**: по окончании оба клиента вызывают `report_result(...)`. Если результаты совпали, Elo (K=32) считается **в базе данных**. Не совпали — матч помечается `disputed`, рейтинг не меняется. Если соперник отключился и не прислал отчёт, через 25 с принимается единственный отчёт (`settle_match`).
-- **Защита таблиц**: с клиента нельзя писать в `profiles`, `matches`, `queue`, только вызывать функции.
+| Module | Effect |
+|---|---|
+| Energy Shield | Absorbs 70 damage for 5 seconds |
+| Repair Kit | Heals 45 health and fully repairs nearby walls |
+| Mine | Hidden mine: 65 damage and slows the enemy, lasts 45 seconds |
+| Overdrive | +45% speed and 30% faster fire for 5 seconds |
+| Turret | Auto-turret for 12 seconds, hits enemies within 340 |
+| Blink | Teleport toward the cursor, up to 360, even through walls |
 
-## Что проверено
+## Ranked play
 
-- Ядро: бот против бота, десятки матчей до конца, без NaN и зависаний.
-- Клиент: два клиента (хост и гость) играют полный матч через эмулированный канал: рукопожатие, синхронизация, конец матча, отчёт о результате, отсутствие ошибок в рантайме.
-- SQL: на настоящем Postgres 16 со стабами Supabase: матчмейкинг, Elo (1100 против 1000 даёт 1112 / 988), ничья, спор, отключение соперника, отмена матча, запрет прямой записи и чтения чужих матчей.
+Everyone starts at 1000 rating. Win to climb, lose to drop.
 
-- Интерфейс и тренировка с ботом: в настоящем Chromium, без ошибок в консоли.
+Bronze (under 900) · Silver (900) · Gold (1100) · Platinum (1300) · Diamond (1500) · Master (1700)
 
-**Не проверено:** реальный Supabase Realtime между двумя браузерами, звук и сам игровой баланс (его надо играть руками).
+Not ready for ranked? Try **Practice** against a bot. It doesn't affect your rating.
 
-## Честные ограничения (стоит знать до запуска)
+## Languages
 
-1. **Читерство.** Хост считает урон и победу, поэтому недобросовестный хост может подкрутить результат. Для защиты от этого нужен авторитетный сервер (см. ниже). Пока что рейтинг защищён только тем, что оба игрока должны согласиться с результатом.
-2. **Лимиты Realtime.** Один матч генерирует около 35 сообщений в секунду. На бесплатном тарифе Supabase есть лимит сообщений в секунду на весь проект (порядка сотни, точное значение смотри в документации), так что одновременно потянет лишь несколько матчей. Для публичного запуска нужен платный тариф или свой сервер.
-3. **Игровой баланс** (урон, откат способностей, стоимость стен, награда за лагеря) выставлен «на глаз». Значения лежат в начале `sim.js`, в объекте `C`.
-4. Это 2D-вид сверху, а не 3D.
-
-## Куда развивать
-
-- **Свой авторитетный сервер** на Node.js (WebSocket, на Render/Fly/Railway): `sim.js` уже работает в Node без изменений, сервер просто запускает `World` и принимает ввод игроков. Это решает и читерство, и лимиты Realtime.
-- Герои с разными способностями, крипы по линиям, предметы за души.
-- Сезоны рейтинга, реплеи, мобильное управление.
+English by default. Switch to Russian anytime in **Settings**.
