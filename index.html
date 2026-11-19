@@ -3,113 +3,216 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Build Arena — рейтинговая арена</title>
+  <title>Build Arena</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="booting">
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z"/></symbol>
+    <symbol id="i-bot" viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V4M9 14h.01M15 14h.01M2 13v3M22 13v3"/></symbol>
+    <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 01-10 0V4zM17 5h3v2a3 3 0 01-3 3M7 5H4v2a3 3 0 003 3"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5a2 2 0 012-2h13v16H6a2 2 0 00-2 2V5zM4 19a2 2 0 012-2h13"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9L17 7M7 17l-2.1 2.1"/></symbol>
+    <symbol id="i-out" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></symbol>
+  </svg>
+
+  <canvas id="bg"></canvas>
+
+  <div id="topbar">
+    <button id="btn-lang" class="icon-btn" title="Language">RU</button>
+    <button id="btn-gear" class="icon-btn" title="Settings"><svg class="ic"><use href="#i-gear"/></svg></button>
+  </div>
+
+  <div id="wipe"></div>
+
+  <!-- ===== Интро ===== -->
+  <div id="intro">
+    <canvas id="intro-cv"></canvas>
+    <div id="intro-logo" class="intro-logo"></div>
+    <div class="intro-tag" data-i18n="tagline"></div>
+    <div class="intro-skip" data-i18n="skip_intro"></div>
+    <div class="intro-flash"></div>
+  </div>
+
   <!-- ===== Авторизация ===== -->
   <section id="auth" class="screen">
-    <div class="card">
-      <h1>BUILD<span>ARENA</span></h1>
-      <p class="sub">Стройка, как в Fortnite. Души и ядра, как в Dota и Deadlock. Рейтинг Elo.</p>
-      <div class="tabs">
-        <button id="tab-login" class="tab active">Вход</button>
-        <button id="tab-register" class="tab">Регистрация</button>
+    <div class="auth-wrap">
+      <h1 class="logo center"><span class="l-a" data-text="BUILD">BUILD</span><span class="l-b" data-text="ARENA">ARENA</span></h1>
+      <p class="tagline" data-i18n="tagline"></p>
+      <div class="card glass">
+        <div class="tabs">
+          <button id="tab-login" class="tab active" data-i18n="auth_login"></button>
+          <button id="tab-register" class="tab" data-i18n="auth_register"></button>
+        </div>
+        <label id="row-name" class="hidden"><span data-i18n="auth_nick"></span>
+          <input id="in-name" maxlength="16" autocomplete="username" data-i18n-ph="auth_nick_ph">
+        </label>
+        <label><span data-i18n="auth_email"></span>
+          <input id="in-email" type="email" autocomplete="email" placeholder="you@mail.com">
+        </label>
+        <label><span data-i18n="auth_pass"></span>
+          <input id="in-pass" type="password" autocomplete="current-password" data-i18n-ph="auth_pass_ph">
+        </label>
+        <button id="btn-auth" class="btn primary" data-i18n="auth_btn_login"></button>
+        <button id="btn-skip" class="btn ghost" data-i18n="auth_skip"></button>
       </div>
-      <label id="row-name" class="hidden">Ник (3–16 символов)
-        <input id="in-name" maxlength="16" autocomplete="username" placeholder="Например, Builder99">
-      </label>
-      <label>Email
-        <input id="in-email" type="email" autocomplete="email" placeholder="you@mail.com">
-      </label>
-      <label>Пароль
-        <input id="in-pass" type="password" autocomplete="current-password" placeholder="минимум 6 символов">
-      </label>
-      <button id="btn-auth" class="btn primary">Войти</button>
-      <button id="btn-skip" class="btn ghost">Играть без аккаунта (тренировка)</button>
     </div>
   </section>
 
   <!-- ===== Меню ===== -->
   <section id="menu" class="screen">
-    <div class="card wide">
-      <h1>BUILD<span>ARENA</span></h1>
-      <div id="offline-note" class="note hidden">
-        Онлайн-режим не настроен: заполни <code>config.js</code> данными Supabase (см. README). Тренировка работает и так.
+    <div class="menu-wrap">
+      <div class="menu-left">
+        <h1 class="logo"><span class="l-a" data-text="BUILD">BUILD</span><span class="l-b" data-text="ARENA">ARENA</span></h1>
+        <p class="tagline" data-i18n="tagline"></p>
+        <div id="offline-note" class="note hidden" data-i18n="offline_note"></div>
+        <nav class="menu-list">
+          <button id="btn-find" class="menu-btn primary" style="--i:0"><svg class="ic"><use href="#i-bolt"/></svg><span class="mb-txt"><b data-i18n="menu_play"></b><small data-i18n="menu_play_sub"></small></span></button>
+          <button id="btn-practice" class="menu-btn" style="--i:1"><svg class="ic"><use href="#i-bot"/></svg><span class="mb-txt"><b data-i18n="menu_practice"></b><small data-i18n="menu_practice_sub"></small></span></button>
+          <button id="btn-board" class="menu-btn" style="--i:2"><svg class="ic"><use href="#i-trophy"/></svg><span class="mb-txt"><b data-i18n="menu_board"></b><small data-i18n="menu_board_sub"></small></span></button>
+          <button id="btn-help" class="menu-btn" style="--i:3"><svg class="ic"><use href="#i-book"/></svg><span class="mb-txt"><b data-i18n="menu_help"></b><small data-i18n="menu_help_sub"></small></span></button>
+          <button id="btn-settings" class="menu-btn" style="--i:4"><svg class="ic"><use href="#i-gear"/></svg><span class="mb-txt"><b data-i18n="menu_settings"></b><small data-i18n="menu_settings_sub"></small></span></button>
+          <button id="btn-logout" class="menu-btn ghost" style="--i:5"><svg class="ic"><use href="#i-out"/></svg><span class="mb-txt"><b id="logout-txt" data-i18n="menu_logout"></b></span></button>
+        </nav>
       </div>
-      <div id="me-box" class="me-box">
-        <div>
-          <div id="me-name" class="me-name">Гость</div>
-          <div id="me-stats" class="me-stats"></div>
+      <aside class="menu-right">
+        <div class="profile glass">
+          <div class="pf-top">
+            <div class="avatar" id="me-avatar"><span id="me-initial">?</span></div>
+            <div class="pf-main">
+              <div id="me-name" class="me-name">Guest</div>
+              <div id="me-sub" class="muted small"></div>
+            </div>
+            <div class="pf-rating"><span id="me-rating">—</span><small data-i18n="rating"></small></div>
+          </div>
+          <div class="rank-row"><span id="me-rank" class="rank"></span><span id="me-next" class="muted small"></span></div>
+          <div class="rank-bar"><i id="me-rank-fill"></i></div>
+          <div class="stats">
+            <div><b id="st-games">0</b><small data-i18n="stat_games"></small></div>
+            <div><b id="st-wins">0</b><small data-i18n="stat_wins"></small></div>
+            <div><b id="st-wr">0%</b><small data-i18n="stat_wr"></small></div>
+          </div>
         </div>
-        <div class="me-rating"><span id="me-rating">—</span><small>рейтинг</small></div>
-      </div>
-      <div class="btn-col">
-        <button id="btn-find" class="btn primary big">⚔ Найти рейтинговый матч</button>
-        <button id="btn-practice" class="btn big">🤖 Тренировка с ботом</button>
-        <button id="btn-board" class="btn">🏆 Таблица лидеров</button>
-        <button id="btn-logout" class="btn ghost">Выйти</button>
-      </div>
-      <details class="help" open>
-        <summary>Управление и правила</summary>
-        <ul>
-          <li><b>WASD</b> — движение, <b>мышь</b> — прицел, <b>ЛКМ</b> — стрельба, <b>1 / 2</b> — винтовка / дробовик</li>
-          <li><b>Q</b> или <b>ПКМ</b> — поставить стену (10 материалов, восстанавливаются сами)</li>
-          <li><b>E</b> — редактировать свою стену: стена → окно (пули летят) → дверь (проходить можно) → стена</li>
-          <li><b>Пробел</b> — рывок, <b>Z</b> — взрывная волна, <b>R</b> — удар с орбиты (с 3 уровня)</li>
-          <li>Убивай нейтралов и врага — получай души, растёт уровень: здоровье, урон, способности</li>
-          <li>Цель: уничтожить ядро врага (оно стреляет по приближающимся!). Через 4 минуты побеждает тот, у кого ядро целее</li>
-        </ul>
-      </details>
+        <div class="top glass">
+          <h3 data-i18n="top_players"></h3>
+          <ol id="top-list"></ol>
+        </div>
+        <div class="tip glass">
+          <small class="muted" data-i18n="tip_label"></small>
+          <p id="tip-text"></p>
+        </div>
+      </aside>
     </div>
   </section>
 
   <!-- ===== Поиск матча ===== -->
   <section id="queue" class="screen">
-    <div class="card">
-      <h2>Поиск соперника…</h2>
-      <div class="spinner"></div>
-      <p id="queue-timer" class="sub">0 с</p>
-      <button id="btn-cancel" class="btn">Отмена</button>
+    <div class="card glass center-text">
+      <h2 data-i18n="queue_title"></h2>
+      <div class="radar"><i></i><i></i><i></i><em></em><b></b></div>
+      <p id="queue-timer" class="queue-timer">0</p>
+      <p class="muted" data-i18n="queue_sub"></p>
+      <button id="btn-cancel" class="btn" data-i18n="cancel"></button>
     </div>
   </section>
 
   <!-- ===== Таблица лидеров ===== -->
   <section id="board" class="screen">
-    <div class="card wide">
-      <h2>🏆 Топ игроков</h2>
+    <div class="panel glass">
+      <h2 data-i18n="board_title"></h2>
       <div class="table-wrap">
         <table>
-          <thead><tr><th>#</th><th>Игрок</th><th>Рейтинг</th><th>Игры</th><th>Победы</th></tr></thead>
+          <thead><tr><th>#</th><th data-i18n="col_player"></th><th data-i18n="col_rating"></th><th data-i18n="col_games"></th><th data-i18n="col_wins"></th></tr></thead>
           <tbody id="board-body"></tbody>
         </table>
       </div>
-      <button id="btn-board-back" class="btn">Назад</button>
+      <button id="btn-board-back" class="btn" data-i18n="back"></button>
+    </div>
+  </section>
+
+  <!-- ===== Настройки ===== -->
+  <section id="settings" class="screen">
+    <div class="panel glass wide">
+      <h2 data-i18n="set_title"></h2>
+      <div class="set-grid">
+        <div class="set-col">
+          <h3 data-i18n="set_lang"></h3>
+          <div class="seg"><button id="lang-ru">Русский</button><button id="lang-en">English</button></div>
+
+          <h3 data-i18n="set_audio"></h3>
+          <div class="set-row"><span data-i18n="set_volume"></span>
+            <div class="range-box"><input id="set-vol" type="range" min="0" max="100" step="1"><b id="set-vol-val"></b></div></div>
+
+          <h3 data-i18n="set_gfx"></h3>
+          <div class="set-row"><span data-i18n="set_shake"></span>
+            <div class="range-box"><input id="set-shake" type="range" min="0" max="150" step="5"><b id="set-shake-val"></b></div></div>
+          <div class="set-row"><span data-i18n="set_quality"></span><button id="set-quality" class="toggle on"></button></div>
+          <div class="set-row"><span data-i18n="set_dmg"></span><button id="set-dmg" class="toggle"></button></div>
+          <div class="set-row"><span data-i18n="set_fps"></span><button id="set-fps" class="toggle"></button></div>
+        </div>
+        <div class="set-col">
+          <h3 data-i18n="set_controls"></h3>
+          <div id="set-binds" class="binds"></div>
+          <p class="muted small" data-i18n="mouse_info"></p>
+          <button id="btn-reset-binds" class="btn ghost" data-i18n="set_reset"></button>
+        </div>
+      </div>
+      <button id="btn-set-back" class="btn" data-i18n="back"></button>
+    </div>
+  </section>
+
+  <!-- ===== Как играть ===== -->
+  <section id="help" class="screen">
+    <div class="panel glass wide">
+      <h2 data-i18n="help_title"></h2>
+      <div id="help-body" class="help-grid"></div>
+      <button id="btn-help-back" class="btn" data-i18n="back"></button>
     </div>
   </section>
 
   <!-- ===== Игра ===== -->
   <section id="game" class="screen">
     <canvas id="cv" width="1600" height="900"></canvas>
-    <button id="btn-leave" class="leave">Выйти (Esc)</button>
+    <button id="btn-leave" class="leave" data-i18n="leave"></button>
     <div id="result" class="overlay hidden">
-      <div class="card">
-        <h2 id="res-title">ПОБЕДА</h2>
-        <p id="res-sub" class="sub"></p>
+      <div class="card glass center-text result-card">
+        <h2 id="res-title">VICTORY</h2>
+        <p id="res-sub" class="muted"></p>
         <p id="res-rating" class="rating-change"></p>
+        <p id="res-stats" class="muted small"></p>
         <div class="btn-col">
-          <button id="btn-again" class="btn primary hidden">Ещё раз</button>
-          <button id="btn-res-menu" class="btn">В меню</button>
+          <button id="btn-again" class="btn primary hidden" data-i18n="res_again"></button>
+          <button id="btn-res-menu" class="btn" data-i18n="res_menu"></button>
         </div>
       </div>
     </div>
   </section>
 
+  <div id="modal" class="overlay hidden">
+    <div class="card glass center-text">
+      <h2 id="modal-title"></h2>
+      <p id="modal-text" class="muted"></p>
+      <div class="btn-row">
+        <button id="modal-yes" class="btn primary"></button>
+        <button id="modal-no" class="btn"></button>
+      </div>
+    </div>
+  </div>
+
   <div id="toast" class="toast hidden"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="config.js"></script>
+  <script src="i18n.js"></script>
+  <script src="settings.js"></script>
+  <script src="audio.js"></script>
   <script src="sim.js"></script>
+  <script src="intro.js"></script>
+  <script src="render.js"></script>
   <script src="main.js"></script>
 </body>
 </html>
